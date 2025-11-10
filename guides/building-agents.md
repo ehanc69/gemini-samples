@@ -14,7 +14,7 @@ An agent generally consists of these core components:
 
 1. **The Model (Brain):** The reasoning engine, in our case a Gemini model. It reasons through ambiguity, plans steps, and decides when it needs outside help.
 2. **Tools (Hands):** Functions the agent can execute to interact with the outside world/environment (e.g., searching the web, reading a file, calling an API).
-3. **Context/Memory (Workspace):** The information the agent has access to at any moment. Managing this effectively—known as **Context Engineering**—is crucial, as models have a finite "attention budget."
+3. **Context/Memory (Workspace):** The information the agent has access to at any moment. Managing this effectively, known as **Context Engineering**.
 4. **The Loop (Life):** A `while` loop that allows the model to: Observe → Think → Act → Observe again, until the task is complete.
 
 
