@@ -305,37 +305,33 @@ while True:
 
 ## Best Practices for Engineering Agents
 
-Building the loop is easy; making it reliable, transparent, and controllable is hard. Here are key engineering principles derived from top industry practices.
+Building the loop is easy; making it reliable, transparent, and controllable is hard. Here are key engineering principles derived from top industry practices, grouped by functional area.
 
-### 1. Tool Ergonomics
-
+### 1. Tool Definition & Ergonomics
 Your tools are the interface for the model. Don't just wrap your existing internal APIs. If a tool is confusing to a human, it's confusing to the model:
 
 *   **Clear Naming:** Use obvious names like `search_customer_database` rather than `cust_db_v2_query`.
 *   **Precise Descriptions:** Gemini reads the function docstrings to understand *when* and *how* to use a tool. Spend time writing these carefully—it is essentially "prompt engineering" for tools.
-*   **Don't "Dump" Data:** LLMs have a limited context window. Do not have a tool that returns an entire 10MB database table. Instead of `get_all_users()`, create `search_users(query: str)`.
-*   **Return meaningful errors:** Don't return a 50 line Java stack trace. If a tool fails, return a clear string like Error: File not found. Did you mean 'data.csv'?. This allows the agent to self-correct.
-*   **Tolerate fuzzy inputs:** If a model frequently guesses file paths wrong, update your tool to handle relative paths or common typos rather than just erroring out.
+*   **Return Meaningful Errors:** Don't return a 50-line Java stack trace. If a tool fails, return a clear string like `Error: File not found. Did you mean 'data.csv'?`. This allows the agent to self-correct.
+*   **Tolerate Fuzzy Inputs:** If a model frequently guesses file paths wrong, update your tool to handle relative paths or fuzzy inputs rather than just erroring out.
 
 ### 2. Context Engineering
+Models have a finite "attention budget." Managing what information enters the context is crucial for performance and cost.
 
-Models have a finite "attention budget". Every tool result is returned back into the loop and consumes tokens. If an agent runs for too many turns, it can get "confused" as irrelevant past information distracts it.
+*   **Don't "Dump" Data:** Don't have a tool that returns an entire 10MB database table. Instead of `get_all_users()`, create `search_users(query: str)`.
+*   **Just-in-time Loading:** Instead of pre-loading all data (traditional RAG), use just-in-time strategies. The agent should maintain lightweight identifiers (file paths, IDs) and use tools to dynamically load content only when needed.
+*   **Compression:** For very long-running agents, summarize the history, remove old context or start a new sessions.
+*   **Agentic Memory:** Allow the agent to maintain notes or a scratchpad persisted *outside* the context window, pulling them back in only when relevant.
 
-*   **Truncate Outputs:** If a tool returns a massive JSON object, consider trimming it to only essential fields before sending it back. 
-*   **Just-in-time:** Instead of pre-loading all possible relevant data upfront (traditional RAG), effective agents often use "just-in-time" strategies. The agent maintains lightweight identifiers (file paths, database keys) and uses tools to dynamically load data into context only when needed.18 For example, a coding agent shouldn't load the entire codebase; it should use list_files and read_file tools to explore on demand.
-*   **Compression:** For very long-running agents, you may need to occasionally summarize the history and start a fresh chat session with that summary as the new system instruction.
-*   **Agentic Memory:** The agent actively maintains notes or a scratchpad persisted outside the context window, pulling them back in when relevant to track progress.
-- **Loop limit:** Ensure your loop has a max_iterations break (e.g., 15 turns) so it doesn't get stuck in a loop and drain your API credits.
-
-### 3. Start Simple
+### 3. Don't over engineer
 
 It's tempting to build complex multi-agent systems. Don't.
 
-- **Maximize a single agent first.** Gemini is highly capable of handling dozens of tools in a single prompt.
-- **Split only when necessary.** If you find your agent getting confused because it has too many similar tools (e.g., `update_customer_billing` vs `update_customer_shipping`), try to split them into separate subagents.
-- **Prioritize Transparency and Debugging:** Understand why your agent takes specific actions. Log tool calls and parameters. Analyzing the model's reasoning helps identify if issues lie in the prompt, the tool description, or the implementation.
-- **Guardrails and System Instructions:** Use the `system_instruction` to guide the model hard rules or add additional classifier and guardrails, e.g. "You are a billing agent. You are strictly forbidden from offering refunds greater than $50. You must always ask for confirmation before finalizing a transaction."
-- **Human-in-the-loop:** For sensitive actions (like `send_email` or `execute_code`), pause the loop and require user confirmation before the tool is actually executed.
+*   **Maximize a Single Agent First:** Don't immediately build complex multi-agent systems. Gemini is highly capable of handling dozens of tools in a single prompt.
+*   **Escape Hatches:** Ensure loops can be stopped like a `max_iterations` break (e.g., 15 turns).
+*   **Guardrails and System Instructions:** Use the `system_instruction` to guide the model with hard rules (e.g., "You are strictly forbidden from offering refunds greater than $50") or use external classifier.
+*   **Human-in-the-loop:** For sensitive actions (like `send_email` or `execute_code`), pause the loop and require user confirmation before the tool is actually executed.
+*   **Prioritize Transparency and Debugging:** Log tool calls and parameters. Analyzing the model's reasoning helps identify if issues, and improve the agent over time. 
 
 ## Conclusion
 
