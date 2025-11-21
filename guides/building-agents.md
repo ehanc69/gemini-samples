@@ -1,4 +1,4 @@
-# Practical Guide on how to build an Agent with Gemini
+# Practical Guide on how to build an Agent with Gemini 3
 
 It seems complicated, when you watch an AI agent edit multiple files, run commands, handle errors, and iteratively solve a problem, it feels like magic. But it isn’t. The secret to building an agent is that there is no secret.
 
@@ -48,13 +48,13 @@ flowchart TD
 
 ## Building an Agent
 
-We will now build a simple agent step-by-step, progressing from basic text generation to a functional CLI agent using the Gemini Python SDK. 
+Let's build an agent step-by-step, progressing from basic text generation to a functional CLI agent using Gemini 3 Pro and Python SDK. 
 
 _Prerequisites: Install the SDK (`pip install google-genai`) and set your `GEMINI_API_KEY` environment variable ([Get it in AI Studio](https://aistudio.google.com/app/apikey))._
 
 ### Step 1: Basic Text Generation and Abstraction
 
-The first step is to create a baseline interaction with the LLM, for us Gemini. We are going to create a simple Agent class abstraction to structure our code, which we will extend throughout this guide. We will first start with a simple chatbot that maintains a conversation history.
+The first step is to create a baseline interaction with the LLM, for us Gemini 3 Pro. We are going to create a simple Agent class abstraction to structure our code, which we will extend throughout this guide. We will first start with a simple chatbot that maintains a conversation history.
 
 ```python
 from google import genai
@@ -74,7 +74,7 @@ class Agent:
 
         return response
 
-agent = Agent(model="gemini-flash-latest")
+agent = Agent(model="gemini-3-pro-preview")
 response1 = agent.run(
     contents="Hello, What are top 3 cities in Germany to visit? Only return the names of the cities."
 )
@@ -201,7 +201,7 @@ class Agent:
 
         return response
 
-agent = Agent(model="gemini-flash-latest", tools=file_tools)
+agent = Agent(model="gemini-3-pro-preview", tools=file_tools)
 
 response = agent.run(
     contents="Can you list my files in the current directory?"
@@ -217,6 +217,8 @@ Great! The model has successfully called the tool. Now, we need to add the tool 
 An Agent isn't about generating one tool call, but about generating a series of tool calls, returning the results back to the model, and then generating another tool call, and so on until the task is completed.
 
 The `Agent` class handles the core loop: intercepting the `FunctionCall`, executing the tool on the client side, and sending back the `FunctionResponse`. We also add a `SystemInstruction` to the model to guide the model on what to do.
+
+_Note: Gemini 3 uses [Thought signatures](https://ai.google.dev/gemini-api/docs/gemini-3?thinking=high#thought_signatures) to maintain reasoning context across API calls. You must return these signatures back to the model in your request exactly as they were received._
 
 ```python
 # ... Code for the tools and tool definitions from Step 2 should be here ...
@@ -264,7 +266,7 @@ class Agent:
         return response
 
 agent = Agent(
-    model="gemini-flash-latest", 
+    model="gemini-3-pro-preview", 
     tools=file_tools, 
     system_instruction="You are a helpful Coding Assistant. Respond like you are Linus Torvalds."
 )
@@ -288,7 +290,7 @@ Now we can run our agent in a simple CLI loop. It takes surprisingly little code
 # ... Code for the Agent, tools and tool definitions from Step 3 should be here ...
 
 agent = Agent(
-    model="gemini-flash-latest", 
+    model="gemini-3-pro-preview", 
     tools=file_tools, 
     system_instruction="You are a helpful Coding Assistant. Respond like you are Linus Torvalds."
 )
